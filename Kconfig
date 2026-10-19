@@ -41,7 +41,7 @@ config SOC_IMX91
 
 config SOC_IMX93
 	bool
-	default y if SOC_IMX93FRDM || SOC_IMX93EVK
+	default y if SOC_IMX93FRDM || SOC_IMX93EVK || SOC_MISNET_IMX93_ES001_REVA
 
 config SOC_IMX95_15X15
 	bool
@@ -69,6 +69,7 @@ config PLATFORM_LS
 
 config MACHINE_NAME
     string
+    default "misnet-imx93-es001-reva" if SOC_MISNET_IMX93_ES001_REVA
     default "imx8mpevk" if SOC_IMX8MPEVK
     default "imx8mpfrdm" if SOC_IMX8MPFRDM
     default "imx8mmevk" if SOC_IMX8MMEVK
@@ -91,6 +92,38 @@ config MACHINE_NAME
 # Build Configuration Categories
 # ============================================================================
 menu "Build Configuration"
+
+choice MISNET_BUILD_PROFILE
+	prompt "MISNET build profile"
+	depends on SOC_MISNET_IMX93_ES001_REVA
+	default MISNET_DEV
+
+config MISNET_DEV
+	bool "Development"
+
+config MISNET_DEMO
+	bool "Demo (PN5180 DTB)"
+
+config MISNET_PRODUCTION
+	bool "Production (EVK baseline)"
+
+endchoice
+
+config MISNET_PROFILE
+	string
+	default "dev" if MISNET_DEV
+	default "demo" if MISNET_DEMO
+	default "production" if MISNET_PRODUCTION
+	default ""
+
+config LINUX_DTB
+	string "Selected Linux DTB filename"
+	depends on SOC_MISNET_IMX93_ES001_REVA
+	default "imx93-11x11-evk-pn5180.dtb" if MISNET_DEMO
+	default "imx93-11x11-evk.dtb"
+	help
+	  Filename under arch/arm64/boot/dts/freescale/.
+	  Stage this DTB and select it in the generated boot script.
 
 config JOBS
 	int "Parallel build jobs"

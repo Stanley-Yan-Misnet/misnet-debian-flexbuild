@@ -8,6 +8,9 @@
 dl-kernel dl-linux:
 	@$(call download_repo,linux,linux)
 	$(call patch_apply,linux,linux)
+	if [ -n "$(LINUX_DTB)" ]; then
+	    test -f "$(KERNEL_PATH)/arch/arm64/boot/dts/freescale/$(LINUX_DTB:.dtb=.dts)" || { echo "Missing selected DTS: $(LINUX_DTB:.dtb=.dts). See docs/misnet-build-profiles.md" >&2; exit 1; }
+	fi
 	$(call fbprint_b,"linux with $(KERNEL_BRANCH)")
 	mkdir -p $(KOUTDIR)/tmp
 	if [ -f "$(FBDIR)/configs/linux/$(CONFIG_LINUX_EXTRA_CONFIG)" ]; then \

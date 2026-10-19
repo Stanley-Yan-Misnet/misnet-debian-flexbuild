@@ -102,7 +102,7 @@ case "${board_id}" in
         safe_run ln -sf weston.ini.imx91 /etc/xdg/weston/weston.ini
         safe_run systemctl enable weston
         ;;
-    imx93*)
+    imx93*|misnet-imx93-es001-reva)
         safe_run ln -sf libg2d-pxp.so.2.4.0 /usr/lib/libg2d.so.2
         if [ -f /usr/lib/libg2d-viv.so.2.4.0 ]; then
             safe_run rm -f /usr/lib/libg2d-viv.so.2.4.0

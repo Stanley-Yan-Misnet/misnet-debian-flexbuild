@@ -8,6 +8,9 @@
 
 
 DTBSTR := $(if $(filter y,$(CONFIG_PLATFORM_IMX)),imx*.dtb,fsl*.dtb)
+ifneq ($(LINUX_DTB),)
+DTBSTR := $(LINUX_DTB)
+endif
 
 LINUX_MODULES := \
     cryptodev_linux \

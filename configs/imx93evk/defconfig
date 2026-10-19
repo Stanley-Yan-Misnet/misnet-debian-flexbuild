@@ -1,0 +1,5 @@
+# i.MX93 EVK baseline. Uses Kconfig defaults for component selection.
+CONFIG_SOC_IMX93EVK=y
+CONFIG_JOBS=8
+CONFIG_LINUX_EXTRA_CONFIG=""
+CONFIG_CUSTOM_SDK_CONFIG=""

@@ -15,6 +15,7 @@ get_board_id() {
 	#echo $machine_content
 
 	case "$machine_content" in
+	    "misnet-imx93-es001-reva"*) board_id="misnet-imx93-es001-reva" ;;
 	    # NXP i.MX series
 	    *"FRDM-IMX8MPLUS")        board_id="imx8mpfrdm" ;;
 	    *"i.MX8MPlus EVK"*)       board_id="imx8mpevk" ;;

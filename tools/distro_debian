@@ -60,6 +60,9 @@ build_distro_rfs_debian() {
             PKGS=("${ls_pkgs[@]}" "${imx_pkgs[@]}")
             log_mute echo imx package
         fi
+        if [[ "$MACHINE" == "misnet-imx93-es001-reva" && "$MISNET_PROFILE" == "demo" ]]; then
+            PKGS+=("${misnet_demo_pkgs[@]}")
+        fi
         NEWRFSDIR=$RFSDIR
         RFSCMD=$FBDIR/configs/debian/debian_server_arm64.sh
     fi

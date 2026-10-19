@@ -40,6 +40,11 @@ config SOC_IMX93EVK
 	help
 	  imx93evk board
 
+config SOC_MISNET_IMX93_ES001_REVA
+	bool "MISNET i.MX93 ES001 RevA (EVK BSP baseline)"
+	help
+	  misnet-imx93-es001-reva board. Initially uses the i.MX93 EVK BSP.
+
 config SOC_IMX93FRDM
 	bool "FRDM-IMX93 Board (11x11 A2 silicon)"
 	help

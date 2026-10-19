@@ -1,0 +1,38 @@
+From: MISNET BSP maintainers
+Subject: [PATCH] arm64: dts: imx93-evk-pn5180: expose TPM4 channel 2 for fan PWM
+
+On the EVK J1001 header, pin 33 is GPIO_IO13. Route it to TPM4_CH2
+and enable the TPM4 PWM controller in the MISNET demo DTB only.
+The fan period, polarity and power supply remain board-specific.
+
+---
+
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+--- a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+@@ -834,6 +834,12 @@
+ 	status = "okay";
+ };
+ 
++&tpm4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_tpm4_fan>;
++	status = "okay";
++};
++
+ &usbotg1 {
+ 	dr_mode = "otg";
+ 	hnp-disable;
+@@ -957,6 +963,12 @@
+ 		>;
+ 	};
+ 
++	pinctrl_tpm4_fan: tpm4fangrp {
++		fsl,pins = <
++			MX93_PAD_GPIO_IO13__TPM4_CH2	0x02 /* J1001 pin 33 */
++		>;
++	};
++
+ 	pinctrl_eqos: eqosgrp {
+ 		fsl,pins = <
+ 			MX93_PAD_ENET1_MDC__ENET_QOS_MDC			0x57e

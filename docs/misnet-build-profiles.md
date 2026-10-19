@@ -14,6 +14,9 @@
 三組 defconfig 的 component selection 保存本次修改前 `.config` 的選項。
 production 目前只代表獨立建置設定，尚未做套件裁減或出貨設定調整。
 Kernel fragments 目前只有註解，沒有額外 Kernel 選項；DTB 由 `CONFIG_LINUX_DTB` 選擇。
+三組 profile 共用同一份 Kernel source 與 `patch/linux/` 補丁；profile 差異由
+各自的 defconfig 選擇 DTB。風扇 TPM4 設定只位於 demo 使用的 PN5180 DTS，
+不在 dev／production 使用的 EVK DTS 中。
 
 ## 設定入口與產物隔離
 
@@ -106,7 +109,13 @@ U-Boot `fdtfile` 指向預設 EVK 而選錯 DTB。仍需確認板端實際執行
 快取 `dl/linux_lf-6.12.49-2.2.0.tar.gz` 中沒有 PN5180 DTS。
 `patch/linux/0006-arm64-dts-imx93-evk-pn5180-demo.patch` 保存現有
 `imx93-11x11-evk-pn5180.dts` 的完整內容，並在基線 DTS Makefile 註冊 DTB，
-接續既有 0001–0005 補丁。沒有更改目前 source 的 DTS 或 Makefile。
+接續既有 0001–0005 補丁。
+
+`0007-arm64-dts-imx93-evk-pn5180-enable-tpm4-fan-pwm.patch` 只修改 demo DTS：
+啟用 TPM4，將 J1001 pin 33 的 GPIO_IO13 mux 為 TPM4_CH2，pad 設定沿用
+NXP FRDM DTS 的 `0x02`。目前 source 已套用相同修改；未新增 `pwm-fan`
+consumer，也未設定 PWM 頻率、極性或風扇供電，因此開機時不會由此設定
+自動讓風扇運轉。這些項目需依實際風扇規格及 ES001 RevA 線路確認。
 
 現有 source 已有 `.patchdone` 且已含此 DTS/DTB 項目，因此新增補丁不會自動重套，
 也不應刪除標記後重套所有補丁。新 source 依正常 patch 流程套用。

@@ -1,0 +1,69 @@
+From: MISNET BSP maintainers
+Subject: [PATCH] arm64: dts: imx93-evk-pn5180: add RS485 UART8 and move fan PWM
+
+Route LPUART8 TX, RX and RTS to EVK J1001 pins 32, 33 and 10 for a
+half-duplex RS485 transceiver. Move the demo fan PWM from pin 33 to
+TPM5 channel 2 on pin 12 so it does not conflict with UART8 RX.
+
+Enable RS485 direction control at boot. The transceiver's DE polarity,
+fan wiring and target-board routing still require hardware validation.
+
+---
+
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+--- a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+@@ -395,6 +395,14 @@
+ 	status = "disabled";
+ };
+ 
++/* RS485 on J1001: TX=32, RX=33, RTS=10; fan PWM moves to pin 12. */
++&lpuart8 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart8_rs485>;
++	linux,rs485-enabled-at-boot-time;
++	status = "okay";
++};
++
+ /* PN5180 on J1001: BUSY=29, RESET_N=31, CS=24, MISO=21, MOSI=19, SCK=23. */
+ &lpspi3 {
+ 	fsl,spi-num-chipselects = <1>;
+@@ -842,9 +850,9 @@
+ 	status = "okay";
+ };
+ 
+-&tpm4 {
++&tpm5 {
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_tpm4_fan>;
++	pinctrl-0 = <&pinctrl_tpm5_fan>;
+ 	status = "okay";
+ };
+ 
+@@ -971,9 +979,9 @@
+ 		>;
+ 	};
+ 
+-	pinctrl_tpm4_fan: tpm4fangrp {
++	pinctrl_tpm5_fan: tpm5fangrp {
+ 		fsl,pins = <
+-			MX93_PAD_GPIO_IO13__TPM4_CH2	0x02 /* J1001 pin 33 */
++			MX93_PAD_GPIO_IO18__TPM5_CH2	0x02 /* J1001 pin 12 */
+ 		>;
+ 	};
+ 
+@@ -1083,6 +1091,14 @@
+ 		>;
+ 	};
+ 
++	pinctrl_uart8_rs485: uart8rs485grp {
++		fsl,pins = <
++			MX93_PAD_GPIO_IO12__LPUART8_TX		0x31e /* J1001 pin 32 */
++			MX93_PAD_GPIO_IO13__LPUART8_RX		0x31e /* J1001 pin 33 */
++			MX93_PAD_GPIO_IO15__LPUART8_RTS_B		0x31e /* J1001 pin 10 */
++		>;
++	};
++
+ 	pinctrl_lpi2c1: lpi2c1grp {
+ 		fsl,pins = <
+ 			MX93_PAD_I2C1_SCL__LPI2C1_SCL			0x40000b9e

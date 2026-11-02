@@ -9,6 +9,13 @@ FRDM P11 後，舊款 7 吋面板已能正常工作。本文件記錄該已用�
 7-DSI-TOUCH-C 驅動／診斷實驗仍暫停，保存在
 `patch/linux/paused-waveshare/`，不屬於此 DTB。
 
+使用者補充：舊款面板的 5V 接在 FRDM 40-pin P11 的 pin 2，地線接
+附近的 GND 腳；尚未記錄 GND 的確切腳號。FRDM 基礎 DTS 將
+`reg_vexp_5v` 定義為由 PCAL6524 GPIO 8 控制的 `VEXP_5V`，
+與此 P11 供電接法相符。P11 overlay 因此讓面板與橋接器引用
+`reg_vexp_5v`，並要求開機後維持該電源。這是供電設定，
+不會改變面板時序或 I²C 位址；本次未重新量測 pin 2 電壓。
+
 ## 可重現的 DTS
 
 `patch/linux/0011-arm64-dts-imx93-frdm-waveshare-7inch-c-p11-i2c4.patch`

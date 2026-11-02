@@ -1,0 +1,6 @@
+# FRDM i.MX93 with the original Waveshare 7inch C panel on P11 I2C4.
+CONFIG_SOC_IMX93FRDM=y
+CONFIG_LINUX_DTB="imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtb"
+CONFIG_JOBS=8
+CONFIG_LINUX_EXTRA_CONFIG=""
+CONFIG_CUSTOM_SDK_CONFIG=""

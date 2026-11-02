@@ -1,0 +1,158 @@
+Subject: [PATCH] arm64: dts: imx93-frdm: add Waveshare 7inch C on P11 I2C4
+
+Keep the NXP P12/LPI2C1 panel DTB intact. This variant routes the
+Waveshare bridge and touch controller to P11 pins 3/5 (LPI2C4),
+and keeps P11 5V enabled for the panel.
+
+---
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -506,2 +506,5 @@
+ imx93-11x11-frdm-waveshare-7inch-c-panel-dtbs := imx93-11x11-frdm.dtb imx93-11x11-frdm-waveshare-7inch-c-panel.dtbo
+ dtb-$(CONFIG_ARCH_MXC) += imx93-11x11-frdm-waveshare-7inch-c-panel.dtb
++
++imx93-11x11-frdm-waveshare-7inch-c-panel-p11-dtbs := imx93-11x11-frdm.dtb imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtbo
++dtb-$(CONFIG_ARCH_MXC) += imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtb
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtso b/arch/arm64/boot/dts/freescale/imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtso
+new file mode 100644
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-frdm-waveshare-7inch-c-panel-p11.dtso
+@@ -0,0 +1,137 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2025 NXP
++ * Copyright 2026 Misnet
++ */
++
++#include "imx93-pinfunc.h"
++
++/dts-v1/;
++/plugin/;
++
++/* P11 pins 3/5 use LPI2C4; the NXP panel overlay uses LPI2C1 on P12. */
++&reg_vexp_5v {
++	regulator-boot-on;
++	regulator-always-on;
++};
++
++&{/} {
++	panel {
++		compatible = "waveshare,7.0inch-c-panel", "panel-dpi";
++		power-supply = <&reg_vexp_5v>;
++
++		port {
++			panel_to_waveshare: endpoint {
++				remote-endpoint = <&waveshare_to_panel>;
++			};
++		};
++
++		panel-timing {
++			clock-frequency = <50000000>;
++			hactive = <1024>;
++			vactive = <600>;
++			hfront-porch = <100>;
++			hback-porch = <100>;
++			hsync-len = <100>;
++			vback-porch = <10>;
++			vfront-porch = <10>;
++			vsync-len = <10>;
++
++			hsync-active = <0>;
++			vsync-active = <0>;
++			de-active = <1>;
++			pixelclk-active = <1>;
++		};
++	};
++};
++
++&dphy {
++	status = "okay";
++};
++
++&dsi {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@1 {
++			reg = <1>;
++
++			dsi_to_waveshare: endpoint {
++				remote-endpoint = <&waveshare_to_dsi>;
++			};
++		};
++	};
++};
++
++&lcdif {
++	assigned-clock-rates = <400000000>, <50000000>, <400000000>, <133333333>;
++};
++
++&ldb {
++	status = "disabled";
++};
++
++&ldb_phy {
++	status = "disabled";
++};
++
++&lpi2c4 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	clock-frequency = <400000>;
++	pinctrl-names = "default", "sleep";
++	pinctrl-0 = <&pinctrl_lpi2c4_p11>;
++	pinctrl-1 = <&pinctrl_lpi2c4_p11>;
++	status = "okay";
++
++	bridge@45 {
++		compatible = "waveshare,dsi2dpi";
++		reg = <0x45>;
++		power-supply = <&reg_vexp_5v>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++
++				waveshare_to_dsi: endpoint {
++					data-lanes = <1 2>;
++					remote-endpoint = <&dsi_to_waveshare>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++
++				waveshare_to_panel: endpoint {
++					remote-endpoint = <&panel_to_waveshare>;
++				};
++			};
++		};
++	};
++
++	touchscreen@14 {
++		compatible = "goodix,gt911";
++		reg = <0x14>;
++		touchscreen-size-x = <800>;
++		touchscreen-size-y = <480>;
++	};
++};
++
++&lvds_bridge {
++	status = "disabled";
++};
++
++&iomuxc {
++	pinctrl_lpi2c4_p11: lpi2c4p11grp {
++		fsl,pins = <
++			MX93_PAD_GPIO_IO02__LPI2C4_SDA	0x40000b9e
++			MX93_PAD_GPIO_IO03__LPI2C4_SCL	0x40000b9e
++		>;
++	};
++};

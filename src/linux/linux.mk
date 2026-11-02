@@ -9,7 +9,9 @@ dl-kernel dl-linux:
 	@$(call download_repo,linux,linux)
 	$(call patch_apply,linux,linux)
 	if [ -n "$(LINUX_DTB)" ]; then
-	    test -f "$(KERNEL_PATH)/arch/arm64/boot/dts/freescale/$(LINUX_DTB:.dtb=.dts)" || { echo "Missing selected DTS: $(LINUX_DTB:.dtb=.dts). See docs/misnet-build-profiles.md" >&2; exit 1; }
+	    test -f "$(KERNEL_PATH)/arch/arm64/boot/dts/freescale/$(LINUX_DTB:.dtb=.dts)" || \
+	    test -f "$(KERNEL_PATH)/arch/arm64/boot/dts/freescale/$(LINUX_DTB:.dtb=.dtso)" || \
+	    { echo "Missing selected DTB source: $(LINUX_DTB). See docs/frdm-waveshare-7inch-c-p11.md" >&2; exit 1; }
 	fi
 	$(call fbprint_b,"linux with $(KERNEL_BRANCH)")
 	mkdir -p $(KOUTDIR)/tmp

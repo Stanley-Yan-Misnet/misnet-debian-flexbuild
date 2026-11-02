@@ -29,13 +29,15 @@ LPI2C4 SDA／SCL，I²C 設為 400 kHz；面板與橋接器由 `reg_vexp_5v`
 Flexbuild 容器，然後使用：
 
 ```sh
-make config CONFIG=configs/imx93frdm-waveshare-7inch-c-p11/defconfig
+make config CONFIG=configs/imx93frdm-demo/defconfig
 make linux
 make boot
 ```
 
-這組設定選用 FRDM board 與新的 P11 DTB；`make linux` 將 DTB 放入
-Kernel staging，`make boot` 依 `CONFIG_LINUX_DTB` 產生指向該檔名的
+`imx93frdm-demo` 是這組設定的名稱，machine 仍為 `imx93frdm`，與原 FRDM
+設定共用建置目錄。這組設定選用 FRDM board 與新的 P11 DTB；
+`make linux` 將 DTB 放入 Kernel staging，`make boot` 依
+`CONFIG_LINUX_DTB` 產生指向該檔名的
 boot script。切換設定前先保存目前 `.config` 與既有產物資訊；以上命令
 會改寫設定並執行建置。建置映像不等於燒錄實體媒體。
 

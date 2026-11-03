@@ -48,8 +48,11 @@ def main():
             assert conf.syms["SOC_IMX93"].str_value == "y"
             assert conf.syms["MISNET_PROFILE"].str_value == profile
             assert conf.syms["LINUX_EXTRA_CONFIG"].str_value == f"misnet-{profile}.config"
-            dtb = ("imx93-11x11-evk-pn5180.dtb" if profile == "demo"
-                   else "imx93-11x11-evk.dtb")
+            dtb = {
+                "dev": "imx93-11x11-misnet-es001-reva-dev.dtb",
+                "demo": "imx93-11x11-evk-pn5180.dtb",
+                "production": "imx93-11x11-misnet-es001-reva-product.dtb",
+            }[profile]
             values = run(["make", "-s", "profile-vars"], work).strip().split("|")
             machine, family, output, selected, kout, apps, rfs, uboot = values
             assert machine == "misnet-imx93-es001-reva"
@@ -88,6 +91,7 @@ def main():
         conf = kconfiglib.Kconfig("Kconfig")
         conf.load_config(".config")
         assert conf.syms["MISNET_PROFILE"].str_value == "dev"
+        assert conf.syms["LINUX_DTB"].str_value == "imx93-11x11-misnet-es001-reva-dev.dtb"
         print("PASS MISNET board defconfig: defaults to dev")
 
 

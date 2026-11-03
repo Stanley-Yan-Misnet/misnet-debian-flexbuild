@@ -7,16 +7,27 @@
 
 | 設定檔 | profile | Kernel fragment | DTB |
 | --- | --- | --- | --- |
-| `configs/misnet-dev/defconfig` | dev | `configs/linux/misnet-dev.config` | `imx93-11x11-evk.dtb` |
+| `configs/misnet-dev/defconfig` | dev | `configs/linux/misnet-dev.config` | `imx93-11x11-misnet-es001-reva-dev.dtb` |
 | `configs/misnet-demo/defconfig` | demo | `configs/linux/misnet-demo.config` | `imx93-11x11-evk-pn5180.dtb` |
-| `configs/misnet-production/defconfig` | production | `configs/linux/misnet-production.config` | `imx93-11x11-evk.dtb` |
+| `configs/misnet-production/defconfig` | production | `configs/linux/misnet-production.config` | `imx93-11x11-misnet-es001-reva-product.dtb` |
 
 三組 defconfig 的 component selection 保存本次修改前 `.config` 的選項。
 production 目前只代表獨立建置設定，尚未做套件裁減或出貨設定調整。
 Kernel fragments 目前只有註解，沒有額外 Kernel 選項；DTB 由 `CONFIG_LINUX_DTB` 選擇。
 三組 profile 共用同一份 Kernel source 與 `patch/linux/` 補丁；profile 差異由
-各自的 defconfig 選擇 DTB。風扇 TPM4 設定只位於 demo 使用的 PN5180 DTS，
-不在 dev／production 使用的 EVK DTS 中。
+各自的 defconfig 選擇 DTB。dev 與 production 的獨立 DTS 由
+`patch/linux/0012-arm64-dts-imx93-add-misnet-es001-reva-dev-product.patch`
+保存，目前只 include `imx93-11x11-evk.dts`，沒有增刪硬體節點或改動屬性；
+後續各 profile 的硬體設定可分別加在其 DTS。兩者目前仍沿用 EVK 的
+`model` 與 `compatible`，上板前須依 ES001 RevA 硬體核對。
+風扇 PWM 設定只位於 demo 使用的 PN5180 DTS，
+不在 dev／production 使用的 DTS 中。
+`src/linux/linux.mk` 的 `dl-kernel` 對共用 source 依檔名順序套用全部
+`patch/linux/*.patch`，不依 profile 過濾；`0006` 新增 demo DTS，
+`0007`、`0008` 與 `0009` 只修改該 DTS。demo 的 `CONFIG_LINUX_DTB` 選 PN5180 DTB，
+dev／production 各選對應的 MISNET DTB；8GB／16GB 映像容量不影響這項選擇。
+既有 source 的 `.patchdone` 不會因新增補丁而重套；更新該 source 時
+必須先核對內容，不能刪除標記後盲目套用全部補丁。
 
 ## 設定入口與產物隔離
 
@@ -59,6 +70,22 @@ EVK 產物不會自動搬移，新建置使用 `build_lsdk2606/imx93evk/`。
 及 defconfig，並擴充 MISNET profile 的 Kconfig 適用條件；同一 revision 的用途
 差異再用 profile。新增板型後，上述路徑規則會自動使用新的 machine 名稱，
 不須另改 Makefile。
+
+## 待辦：8GB eMMC 映像設定
+
+- 在 `make menuconfig` 加入 MISNET WIC 容量選項，供 dev、demo、production
+  共用；預設維持現有標準設定（10 GiB WIC，供 16GB eMMC 使用）。
+- 8GB 選項只調整 WIC 製作，不複製 Kernel、應用程式或 RootFS 建置設定；
+  將選項由 Kconfig／Makefile 傳至 `tools/flex-builder` 與 `tools/flex-installer`。
+- 8GB WIC 使用獨立檔名，避免覆寫標準 WIC；製圖前檢查分割區配置、
+  RootFS 解包容量及目標映像大小，容量不足時明確失敗。
+- 先以 7.25 GiB 作為候選映像大小；定稿前用 8GB 實板的 `lsblk -b`
+  確認 eMMC 實際容量，並保留映像與裝置間的容量餘量。現有 16GB
+  板端 `/` 已用約 5.03 GiB，估算縮至該大小後約剩 1 GiB，
+  須以新映像及實板重新量測。
+- 驗證三種 profile 的選項、預設行為、兩種 WIC 的檔名、解壓後大小、
+  分割表與檔案系統空間；另在 8GB 板確認開機及實際剩餘空間。
+  製作映像與燒錄實體 eMMC 分開處理，燒錄前另取得明確批准。
 
 ## Demo 預裝開發套件
 
@@ -103,6 +130,27 @@ setenv image Image
 U-Boot `fdtfile` 指向預設 EVK 而選錯 DTB。仍需確認板端實際執行的是本版 `boot.scr`。
 `flex-installer` 加入新 machine 名稱，DTB 清理前綴使用 `imx93`；本次不執行安裝或燒錄。
 
+## Demo AHT21B 的舊 I²C 接線（2026-10-20）
+
+以下記錄舊設定；現行 BME280 設定見本文末的 2026-11-03 紀錄。
+
+demo 使用的 `imx93-11x11-evk-pn5180.dtb` 現在將 LPI2C4 設為 100 kHz，
+並把 GPIO_IO02／GPIO_IO03 分別 mux 成 SDA／SCL；NXP EVK J1001 的對應
+接腳是 pin 3／5。修改由 `patch/linux/0008-arm64-dts-imx93-evk-pn5180-enable-aht21b-i2c.patch`
+保存，dev／production 的 DTB 不受影響。`imx93.dtsi` 將 LPI2C4 alias 為
+`i2c3`，因此載入新版 DTB 後預期出現 `/dev/i2c-3`；實際板端仍須核對。
+
+感測器型號已確認為 AHT21B_v10，而非 DHT11。AHT21B 是 I²C 裝置，
+資料表使用 7-bit 位址 `0x38`；目前 Kernel 的 `aht10` hwmon 驅動只明列
+AHT10／AHT20，故本次只啟用 I²C bus，不宣稱已有 AHT21B 的 kernel
+sensor driver，也不建立未驗證的相容裝置節點。既有 `imx_v8_defconfig`
+已啟用 `CONFIG_I2C_IMX_LPI2C` 與 `CONFIG_I2C_CHARDEV`，可供後續
+userspace 通訊驗證。
+
+MISNET ES001 RevA 仍須按實板原理圖確認 40-pin 接腳走線、感測器供電、
+SDA／SCL 上拉電壓與阻值；不可直接把 5V 上拉接到未確認的 SoC I/O。
+尚未在 8GB／16GB 實板上驗證 I²C ACK、量測值或開機載入的 DTB。
+
 ## 保存現有 PN5180 DTS
 
 本地 Kernel source 沒有 `.git`，不能確認其 commit 或全部既有差異。
@@ -112,10 +160,11 @@ U-Boot `fdtfile` 指向預設 EVK 而選錯 DTB。仍需確認板端實際執行
 接續既有 0001–0005 補丁。
 
 `0007-arm64-dts-imx93-evk-pn5180-enable-tpm4-fan-pwm.patch` 只修改 demo DTS：
-啟用 TPM4，將 J1001 pin 33 的 GPIO_IO13 mux 為 TPM4_CH2，pad 設定沿用
-NXP FRDM DTS 的 `0x02`。目前 source 已套用相同修改；未新增 `pwm-fan`
-consumer，也未設定 PWM 頻率、極性或風扇供電，因此開機時不會由此設定
-自動讓風扇運轉。這些項目需依實際風扇規格及 ES001 RevA 線路確認。
+原先啟用 TPM4，將 J1001 pin 33 的 GPIO_IO13 mux 為 TPM4_CH2，pad 設定沿用
+NXP FRDM DTS 的 `0x02`。`0009` 已將風扇 PWM 改至 TPM5_CH2／pin 12。
+目前未新增 `pwm-fan` consumer，也未設定 PWM 頻率、極性或風扇供電，
+因此開機時不會由此設定自動讓風扇運轉。這些項目需依實際風扇規格及
+ES001 RevA 線路確認。
 
 現有 source 已有 `.patchdone` 且已含此 DTS/DTB 項目，因此新增補丁不會自動重套，
 也不應刪除標記後重套所有補丁。新 source 依正常 patch 流程套用。
@@ -124,6 +173,38 @@ consumer，也未設定 PWM 頻率、極性或風扇供電，因此開機時不�
 現有 DTS 使用 `nxp,pn5180`，註解描述以 userspace/spidev bring-up；
 保存 DTS 不等於加入 PN5180 Kernel driver、binding 或 userspace 應用。
 其中外部 `gas_demo/nfc/bind-pn5180-spidev.sh` 與 README 引用未由這版整合。
+
+`0010-arm64-dts-imx93-evk-pn5180-use-lpspi7.patch` 將 demo 的 PN5180
+改至 LPSPI7，並把 ADP5585 的 EXP_SEL（R4）設為 output-low，以選擇
+CAN2 通往板載收發器及 J1101 的路徑；PN5180 使用 J1001 的 IO04–07。
+依
+[NXP EVK 手冊的 J1001 腳位表](https://community.nxp.com/pwmxy87654/attachments/pwmxy87654/imx-processors/215888/1/MCIMX93EVKUM.pdf)，
+接線須改為 CS=pin 7（GPIO_IO04／gpio2 offset 4）、
+MISO=pin 29（GPIO_IO05）、MOSI=pin 31（GPIO_IO06）、SCK=pin 26
+（GPIO_IO07）、BUSY=pin 27（GPIO_IO00／gpio2 offset 0）、RESET_N=pin 28
+（GPIO_IO01／gpio2 offset 1）。DTS 指定 `spi7` alias；板端應核對
+`/dev/spidev7.0` 與實際 GPIO chip，並同步更新外部 PN5180 應用的裝置路徑
+及 BUSY／RESET_N offset。原來連至 J1001 pin 24／21／19／23／29／31
+的線不能沿用舊定義。此改動只影響 demo DTB，尚未在實板驗證 NFC 通訊。
+同一補丁也啟用 CAN2；SoC 端的 TX／RX pinmux 使用 GPIO_IO25／GPIO_IO27，
+與 PN5180 的 pinmux 無衝突。外部 CAN 匯流排應接板上的 **J1101 CAN 接頭**，
+經板載 U1101 收發器轉成差動訊號：pin 2 為 CAN_H、pin 3 為 CAN_L、
+pin 4 為 GND；pin 1 是 5 V 供電。J1001 上的 GPIO_IO25／GPIO_IO27
+不是 CAN_H／CAN_L 接線端。現有 Kernel 設定為 `CONFIG_CAN_FLEXCAN=m`，
+板端仍須確認 FlexCAN module 載入、CAN 網路介面、收發器待機控制及實際通訊。
+
+## Demo RS485 Modbus 接線（2026-10-28）
+
+`0009-arm64-dts-imx93-evk-pn5180-add-rs485-uart8.patch` 在 demo DTB 啟用
+LPUART8，將 J1001 pin 32／33／10 分別設為 TX／RX／RTS，並啟用 Linux
+開機時的 RS485 半雙工方向控制。pin 33 原本供 TPM4_CH2 風扇 PWM 使用，
+因此同一補丁改以 J1001 pin 12 的 GPIO_IO18／TPM5_CH2 輸出風扇 PWM。
+風扇控制線須實際從 pin 33 改接至 pin 12；UART 預期為 `/dev/ttyLP7`，
+仍需由板端確認。
+
+UART 訊號須經合適 I/O 電壓的 RS485 收發器轉為 A／B 差動線。RTS_B 與
+收發器 DE／RE 的有效極性、終端電阻、偏壓、接地與 Modbus 參數需依
+實際模組及線路核對；目前未驗證板端通訊或風扇輸出。
 
 ## Git 管理與驗證
 
@@ -195,6 +276,22 @@ PN5180 通訊測試。局部 DTB 編譯成功不代表 ES001 RevA 硬體相容�
 - `bash -n` 檢查五個修改過的 Shell 檔案、`git diff --check` 均通過。
 
 沒有執行完整 `make linux`、RootFS、WIC 或五種實機啟動驗證。
+
+## MISNET dev／product DTS 基線（2026-11-03）
+
+`misnet-dev` 使用 `imx93-11x11-misnet-es001-reva-dev.dtb`，
+`misnet-production` 使用 `imx93-11x11-misnet-es001-reva-product.dtb`。
+`0012` 補丁新增兩份獨立 DTS 與 Kbuild 項目；兩份 DTS 目前都直接 include
+NXP 的 `imx93-11x11-evk.dts`。現有 Kernel source 有 `.patchdone`，
+本次先以 `patch --dry-run` 確認，再單獨套用 `0012`，沒有重套舊補丁。
+
+已在既有 `fbdebian:13-3a518191` 容器，以獨立 `/tmp` output 與
+`imx_v8_defconfig` 局部編譯 EVK、dev、product 三個 DTB，並執行
+`python3 tools/tests/check_misnet_profiles.py`：均通過。反編譯比對顯示
+dev／product 的節點與屬性和 EVK 相同；EVK DTB 另含編譯產生的
+`__symbols__` 與部分未被引用的 `phandle`，故檔案大小不同。
+`checkpatch.pl` 對 `0012` 回報 0 error、1 個 MAINTAINERS 提示 warning；
+`git diff --check` 通過。尚未執行完整 `make linux`、映像打包或實板開機驗證。
 
 ## Demo BME280 取代 AHT21B（2026-11-03）
 

@@ -119,8 +119,9 @@ config MISNET_PROFILE
 config LINUX_DTB
 	string "Selected Linux DTB filename"
 	depends on SOC_MISNET_IMX93_ES001_REVA || SOC_IMX93FRDM
+	default "imx93-11x11-misnet-es001-reva-dev.dtb" if MISNET_DEV
 	default "imx93-11x11-evk-pn5180.dtb" if MISNET_DEMO
-	default "imx93-11x11-evk.dtb" if SOC_MISNET_IMX93_ES001_REVA
+	default "imx93-11x11-misnet-es001-reva-product.dtb" if MISNET_PRODUCTION
 	help
 	  Filename under arch/arm64/boot/dts/freescale/. A composite DTB
 	  may use a .dtso overlay source instead of a .dts source.

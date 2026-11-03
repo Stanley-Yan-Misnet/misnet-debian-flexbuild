@@ -1,0 +1,98 @@
+From: MISNET BSP maintainers
+Subject: [PATCH] arm64: dts: imx93-evk-pn5180: use LPSPI7 and CAN2
+
+Move PN5180 to LPSPI7 on J1001 GPIO_IO04..07 and use GPIO_IO00/01
+for BUSY and RESET_N. Drive EXP_SEL low to select the CAN2 path
+to the onboard transceiver and enable CAN2.
+
+---
+
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+--- a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+@@ -17,7 +17,7 @@
+ 	compatible = "fsl,imx93-11x11-evk", "fsl,imx93";
+ 
+ 	aliases {
+-		spi3 = &lpspi3;
++		spi7 = &lpspi7;
+ 	};
+ 
+ 	chosen {
+@@ -386,11 +386,9 @@
+ 	pinctrl-0 = <&pinctrl_flexcan2>;
+ 	pinctrl-1 = <&pinctrl_flexcan2_sleep>;
+ 	xceiver-supply = <&reg_can2_stby>;
+-	/* EXP_SEL is fixed high for PN5180 on the EXPI connector. */
+-	status = "disabled";
+-};
+-
+-/* GPIO_IO08/09 are used by PN5180 CS/MISO. */
++	status = "okay";
++};
++
+ &lpuart7 {
+ 	status = "disabled";
+ };
+@@ -403,19 +401,19 @@
+ 	status = "okay";
+ };
+ 
+-/* PN5180 on J1001: BUSY=29, RESET_N=31, CS=24, MISO=21, MOSI=19, SCK=23. */
+-&lpspi3 {
++/* PN5180 on J1001: BUSY=27, RESET_N=28, CS=7, MISO=29, MOSI=31, SCK=26. */
++&lpspi7 {
+ 	fsl,spi-num-chipselects = <1>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pn5180_spi>, <&pinctrl_pn5180_gpio>;
+-	cs-gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
++	cs-gpios = <&gpio2 4 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+ 
+ 	/*
+ 	 * Userspace bring-up: bind this actual device to spidev using
+ 	 * gas_demo/nfc/bind-pn5180-spidev.sh. No PN5180 kernel driver is implied.
+ 	 * SPI mode 0 (no spi-cpol/spi-cpha), MSB first, 1 MHz initially.
+-	 * BUSY (gpio2 offset 5) and RESET_N (offset 6) belong to the application.
++	 * BUSY (gpio2 offset 0) and RESET_N (offset 1) belong to the application.
+ 	 * Kernel-controlled CS is for normal operation with the test bus off;
+ 	 * see README for the BUSY/NSS timing limitation.
+ 	 */
+@@ -633,11 +631,11 @@
+ 		gpio-reserved-ranges = <5 1>;
+ 		#pwm-cells = <3>;
+ 
+-		/* R4 -> EXP_SEL: high routes GPIO_IO08..11 to EXPI, not M.2. */
++		/* R4 -> EXP_SEL: low selects the CAN2 path to J1101. */
+ 		pn5180-exp-select-hog {
+ 			gpio-hog;
+ 			gpios = <4 GPIO_ACTIVE_HIGH>;
+-			output-high;
++			output-low;
+ 			line-name = "pn5180-exp-sel";
+ 		};
+ 	};
+@@ -965,17 +963,17 @@
+ 
+ 	pinctrl_pn5180_spi: pn5180spigrp {
+ 		fsl,pins = <
+-			MX93_PAD_GPIO_IO08__GPIO2_IO08	0x3fe
+-			MX93_PAD_GPIO_IO09__LPSPI3_SIN	0x3fe
+-			MX93_PAD_GPIO_IO10__LPSPI3_SOUT	0x3fe
+-			MX93_PAD_GPIO_IO11__LPSPI3_SCK	0x3fe
++			MX93_PAD_GPIO_IO04__GPIO2_IO04	0x3fe
++			MX93_PAD_GPIO_IO05__LPSPI7_SIN	0x3fe
++			MX93_PAD_GPIO_IO06__LPSPI7_SOUT	0x3fe
++			MX93_PAD_GPIO_IO07__LPSPI7_SCK	0x3fe
+ 		>;
+ 	};
+ 
+ 	pinctrl_pn5180_gpio: pn5180gpiogrp {
+ 		fsl,pins = <
+-			MX93_PAD_GPIO_IO05__GPIO2_IO05	0x31e /* BUSY: app input */
+-			MX93_PAD_GPIO_IO06__GPIO2_IO06	0x31e /* RESET_N: app output */
++			MX93_PAD_GPIO_IO00__GPIO2_IO00	0x31e /* BUSY: app input */
++			MX93_PAD_GPIO_IO01__GPIO2_IO01	0x31e /* RESET_N: app output */
+ 		>;
+ 	};
+ 

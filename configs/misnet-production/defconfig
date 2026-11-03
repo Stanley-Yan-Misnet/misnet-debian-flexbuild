@@ -2,7 +2,7 @@
 # Component selection follows the existing project .config.
 CONFIG_SOC_MISNET_IMX93_ES001_REVA=y
 CONFIG_MISNET_PRODUCTION=y
-CONFIG_LINUX_DTB="imx93-11x11-evk.dtb"
+CONFIG_LINUX_DTB="imx93-11x11-misnet-es001-reva-product.dtb"
 CONFIG_PLATFORM_IMX=y
 CONFIG_JOBS=8
 CONFIG_BUILD_VERBOSE=n

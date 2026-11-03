@@ -1,0 +1,40 @@
+From: MISNET BSP maintainers
+Subject: [PATCH] arm64: dts: add MISNET ES001 RevA dev and product variants
+
+Give the development and product profiles independent DTB names and DTS
+entry points. Both initially include the NXP i.MX93 11x11 EVK board DTS
+without hardware changes; board-specific settings can be added separately.
+
+---
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -496,1 +496,4 @@
++dtb-$(CONFIG_ARCH_MXC) += imx93-11x11-misnet-es001-reva-dev.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx93-11x11-misnet-es001-reva-product.dtb
++
+ dtb-$(CONFIG_ARCH_MXC) += imx93-11x11-frdm.dtb imx93-11x11-frdm-8mic-reve.dtb \
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-dev.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-dev.dts
+new file mode 100644
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-dev.dts
+@@ -0,0 +1,7 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2026 Misnet
++ */
++
++/* ES001 RevA development profile; start from the NXP EVK baseline. */
++#include "imx93-11x11-evk.dts"
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-product.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-product.dts
+new file mode 100644
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-misnet-es001-reva-product.dts
+@@ -0,0 +1,7 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2026 Misnet
++ */
++
++/* ES001 RevA product profile; start from the NXP EVK baseline. */
++#include "imx93-11x11-evk.dts"

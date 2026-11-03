@@ -195,3 +195,28 @@ PN5180 通訊測試。局部 DTB 編譯成功不代表 ES001 RevA 硬體相容�
 - `bash -n` 檢查五個修改過的 Shell 檔案、`git diff --check` 均通過。
 
 沒有執行完整 `make linux`、RootFS、WIC 或五種實機啟動驗證。
+
+## Demo BME280 取代 AHT21B（2026-11-03）
+
+沿用 J1001 pin 3（GPIO_IO02／LPI2C4 SDA）與 pin 5（GPIO_IO03／LPI2C4 SCL）、
+100 kHz bus 設定，將感測器改為 I²C 位址 `0x76` 的 BME280。
+`patch/linux/0013-arm64-dts-imx93-evk-pn5180-add-bme280.patch` 在 demo DTS
+加入 `bosch,bme280`、`pressure@76`、`reg = <0x76>`，並把 AHT21B 專用的
+pinctrl 名稱改為 BME280。感測器 VCC 已確認接 J1001 的 3.3 V 腳；DTS
+以固定 `VRPi_3V3` regulator 表示該供電，供 `vddd-supply` 與 `vdda-supply`
+引用。`configs/linux/misnet-demo.config` 啟用 Kernel 內建 `CONFIG_BMP280=y`，
+此選項會選取 I²C 介面驅動；dev／production DTB 不受影響。
+
+Bosch BME280 的 SDO 接 GND 才是 `0x76`，接 VDDIO 則為 `0x77`；CSB
+需拉高以啟用 I²C。GY 模組的實際接法及晶片 ID 尚待板端核對。
+既有 demo Kernel output `.config` 不會自動重套新的 fragment；本次已先備份，
+再針對該 output 執行 `scripts/config -e BMP280` 與 `olddefconfig`。
+與備份相比只新增 `CONFIG_BMP280=y`、`CONFIG_BMP280_I2C=y`、
+`CONFIG_BMP280_SPI=y`；後者由目前啟用的 SPI master 自動選取。
+
+已用獨立 `/tmp` output 和 `imx_v8_defconfig` 加 `CONFIG_BMP280=y` 局部編譯
+demo DTB 與 `drivers/iio/pressure/`，三個 BMP280 相關物件均進入
+`built-in.a`。反查 DTB 確認 `pressure@76`、`bosch,bme280`、3.3 V
+供電及 `vddd-supply`／`vdda-supply`。`0013` 補丁反向與正向重播成功，
+`checkpatch.pl` 為 0 error、0 warning，`git diff --check` 通過。
+容器沒有 `dt-validate`；尚未執行完整 `make linux`、boot 打包或實板 probe。

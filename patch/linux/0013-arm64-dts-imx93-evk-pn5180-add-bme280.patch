@@ -1,0 +1,57 @@
+From: MISNET BSP maintainers
+Subject: [PATCH] arm64: dts: imx93-evk-pn5180: replace AHT21B with BME280
+
+Add a BME280 at I2C address 0x76 on the existing J1001 LPI2C4 pins.
+Model the confirmed 3.3 V J1001 supply for the sensor binding.
+
+---
+diff --git a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+--- a/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
++++ b/arch/arm64/boot/dts/freescale/imx93-11x11-evk-pn5180.dts
+@@ -15,6 +15,14 @@
+ / {
+ 	model = "NXP i.MX93 11X11 EVK board";
+ 	compatible = "fsl,imx93-11x11-evk", "fsl,imx93";
++
++	reg_vrpi_3v3: regulator-vrpi-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VRPi_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
+ 
+ 	aliases {
+ 		spi7 = &lpspi7;
+@@ -780,12 +788,19 @@
+ 	};
+ };
+ 
+-/* AHT21B I2C bus on J1001 pins 3 (SDA) and 5 (SCL). */
++/* BME280 on J1001 pins 3 (SDA) and 5 (SCL). */
+ &lpi2c4 {
+ 	clock-frequency = <100000>;
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_lpi2c4_aht21b>;
+-	status = "okay";
++	pinctrl-0 = <&pinctrl_lpi2c4_bme280>;
++	status = "okay";
++
++	bme280: pressure@76 {
++		compatible = "bosch,bme280";
++		reg = <0x76>;
++		vddd-supply = <&reg_vrpi_3v3>;
++		vdda-supply = <&reg_vrpi_3v3>;
++	};
+ };
+ 
+ &lpuart1 { /* console */
+@@ -1118,7 +1133,7 @@
+ 		>;
+ 	};
+ 
+-	pinctrl_lpi2c4_aht21b: lpi2c4aht21bgrp {
++	pinctrl_lpi2c4_bme280: lpi2c4bme280grp {
+ 		fsl,pins = <
+ 			MX93_PAD_GPIO_IO02__LPI2C4_SDA	0x40000b9e
+ 			MX93_PAD_GPIO_IO03__LPI2C4_SCL	0x40000b9e
